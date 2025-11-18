@@ -7,3 +7,6 @@
 
 ## Checkpoint 1
 - .gitignore ajouté
+## Checkpoint - 2025-11-18 21:40
+- dataset-ok
+
