@@ -1,0 +1,14 @@
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+
+# Fichiers temporaires
+*.log
+
+# Données générées automatiquement
+data/*.json
+
+# OS / éditeurs
+.DS_Store
+.vscode/
