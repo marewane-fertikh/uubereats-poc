@@ -1,0 +1,5 @@
+STATUT_CREE = "cree"
+STATUT_ENVOYEE_RESTO = "envoyee_au_restaurant"
+STATUT_PRETE = "prete"
+STATUT_ASSIGNEE = "assignee"
+STATUT_LIVREE = "livree"
