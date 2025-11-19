@@ -1,5 +1,7 @@
-# redis/acteurs/plateforme.py
+# redis_poc/acteurs/plateforme.py
+
 import json
+
 from redis_poc.db import (
     mettre_a_jour_statut,
     lire_commande,
@@ -18,8 +20,8 @@ LIVREUR_ID = "LIVREUR_1"
 
 
 def main():
-    print("=== PLATEFORME ===")
-    print("Ce script simule la plateforme (UberEats).")
+    print("=== PLATEFORME (Redis / PubSub) ===")
+    print("Ce script simule la plateforme (UberEats).\n")
     r = get_redis_connection()
     pubsub = r.pubsub()
     pubsub.subscribe(
@@ -44,7 +46,7 @@ def main():
         if channel == CHANNEL_COMMANDE_CREEE:
             # 1) La commande arrive depuis le client
             print(f"[PLATEFORME] Reçu '{CHANNEL_COMMANDE_CREEE}' pour {commande_id}")
-            mettre_a_jour_statut(commande_id, "reçue_par_plateforme")
+            mettre_a_jour_statut(commande_id, "a_preparer")
             print("[PLATEFORME] Commande après mise à jour :")
             print(lire_commande(commande_id))
 
@@ -52,8 +54,8 @@ def main():
             payload = {"commande_id": commande_id}
             publier_event(CHANNEL_COMMANDE_A_PREPARER, payload)
             print(
-                f"[PLATEFORME] Évènement '{CHANNEL_COMMANDE_A_PREPARER}' publié "
-                f"pour {commande_id}\n"
+                f"[PLATEFORME] → Commande envoyée au restaurant "
+                f"via '{CHANNEL_COMMANDE_A_PREPARER}'\n"
             )
 
         elif channel == CHANNEL_COMMANDE_PRETE:
@@ -64,12 +66,12 @@ def main():
             print(lire_commande(commande_id))
 
             # 4) On assigne un livreur
-            mettre_a_jour_statut(commande_id, "assignée", LIVREUR_ID)
+            mettre_a_jour_statut(commande_id, "assignee", LIVREUR_ID)
             payload = {"commande_id": commande_id, "livreur_id": LIVREUR_ID}
             publier_event(CHANNEL_COMMANDE_ASSIGNEE, payload)
             print(
-                f"[PLATEFORME] Évènement '{CHANNEL_COMMANDE_ASSIGNEE}' publié "
-                f"pour {commande_id} avec livreur {LIVREUR_ID}\n"
+                f"[PLATEFORME] → Livreur {LIVREUR_ID} assigné "
+                f"via '{CHANNEL_COMMANDE_ASSIGNEE}'\n"
             )
 
         elif channel == CHANNEL_COMMANDE_LIVREE:
@@ -83,8 +85,8 @@ def main():
             payload = {"commande_id": commande_id}
             publier_event(CHANNEL_COMMANDE_LIVREE_CLIENT, payload)
             print(
-                f"[PLATEFORME] Évènement '{CHANNEL_COMMANDE_LIVREE_CLIENT}' "
-                f"publié pour {commande_id}\n"
+                f"[PLATEFORME] → Notification client envoyée "
+                f"via '{CHANNEL_COMMANDE_LIVREE_CLIENT}'\n"
             )
 
 

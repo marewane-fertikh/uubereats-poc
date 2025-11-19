@@ -1,19 +1,19 @@
 #!/bin/bash
 
-if [ -z "$1" ]; then
-  echo "Usage: ./save_checkpoint <nom>"
-  exit 1
-fi
+# Script de sauvegarde du projet uubereats-poc
+# Crée une archive .tar.gz propre sans .venv, __pycache__, .git, etc.
 
-NAME=$1
-DATE=$(date +"%Y-%m-%d %H:%M")
+DATE=$(date +"%Y-%m-%d_%H-%M-%S")
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CHECKPOINT_DIR="${PROJECT_DIR}/../checkpoints"
 
-echo "## Checkpoint - $DATE" >> docs/progression.md
-echo "- $NAME" >> docs/progression.md
-echo "" >> docs/progression.md
+mkdir -p "$CHECKPOINT_DIR"
 
-git add .
-git commit -m "Checkpoint: $NAME"
-git tag "cp-$NAME"
+tar --exclude=".venv" \
+    --exclude="__pycache__" \
+    --exclude=".git" \
+    -czf "$CHECKPOINT_DIR/uubereats-poc-$DATE.tar.gz" \
+    -C "$(dirname "$PROJECT_DIR")" "$(basename "$PROJECT_DIR")"
 
-echo "Checkpoint '$NAME' créé avec succès."
+echo "✅ Checkpoint créé : $CHECKPOINT_DIR/uubereats-poc-$DATE.tar.gz"
+

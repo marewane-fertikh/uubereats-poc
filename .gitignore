@@ -1,14 +1,31 @@
-# Environnement Python
+# Environnements virtuels
 .venv/
+venv/
+
+# Python cache
 __pycache__/
 *.pyc
 
-# Fichiers temporaires
+# Checkpoints
+../checkpoints/
+checkpoints/
+*.tar.gz
+
+# Mongo / Redis dumps
+dump/
+*.rdb
+
+# Logs
 *.log
 
-# Données générées automatiquement
-data/*.json
-
-# OS / éditeurs
-.DS_Store
+# VSCode / IDE
 .vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data sensible
+*.zip
+
