@@ -1,3 +1,9 @@
+# --- DATA (IMPORTANT : les datasets sont trop lourds pour GitHub)
+data/
+data_local/
+*.csv
+*.json
+
 # Environnements virtuels
 .venv/
 venv/
@@ -26,6 +32,5 @@ dump/
 .DS_Store
 Thumbs.db
 
-# Data sensible
+# Data sensitive or large
 *.zip
-
