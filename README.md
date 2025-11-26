@@ -194,4 +194,5 @@ Ce projet est libre à des fins pédagogiques.
 ## 💬 Questions / remarques
 
 Pour toute remarque ou demande d’information :  
-📧 marewane.fertikh@xxxxx.fr
+📧 marewane.fertikh@edu.univ-paris13.fr
+
