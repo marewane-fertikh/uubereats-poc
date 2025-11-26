@@ -1,30 +1,53 @@
 # mongo/acteurs/livreur.py
-
-import random
 import time
+import random
+from redis_poc.logger import log_livreur
+from mongo.db import get_db
 
-from mongo.db import ecouter_evenements, mettre_a_jour_statut
-from mongo.models import STATUT_ASSIGNEE, STATUT_LIVREE
+
+def compute_delivery_times():
+    """Compute pickup and travel times and a mock distance for demo purposes.
+
+    Returns:
+        tuple: (pickup_seconds: float, travel_seconds: float, distance_km: float)
+    """
+    distance_km = random.uniform(0.5, 8.0)
+    pickup_time = random.uniform(1.0, 2.0)
+    travel_time = distance_km * random.uniform(1.2, 1.6)
+    return pickup_time, travel_time, round(distance_km, 1)
 
 
 def main():
     print("=== LIVREUR (MongoDB / Change Streams) ===")
+    db = get_db()
+    commandes = db["commandes"]
 
-    # Le livreur attend toutes les commandes qui passent à 'assignee'
-    for event in ecouter_evenements(STATUT_ASSIGNEE):
-        commande_id = str(event["_id"])
-        livreur_id = event.get("livreur_id")
+    print("[LIVREUR] En attente de commandes assignées...")
 
-        print(f"[LIVREUR] Nouvelle commande assignée : {commande_id}")
-        print(f"[LIVREUR] Je suis le livreur : {livreur_id}")
+    with commandes.watch(full_document="updateLookup") as stream:
+        for change in stream:
+            doc = change["fullDocument"]
+            if doc.get("statut") != "assignee":
+                continue
 
-        # Simulation du trajet
-        temps = random.uniform(0.5, 2.0)
-        print(f"[LIVREUR] Livraison en cours... (~{temps:.1f}s)")
-        time.sleep(temps)
+            commande_id = doc["_id"]
+            livreur_id = doc.get("livreur_id", "LIVREUR_1")
 
-        mettre_a_jour_statut(commande_id, STATUT_LIVREE)
-        print(f"[LIVREUR] → Commande livrée (statut = {STATUT_LIVREE}).\n")
+            log_livreur(livreur_id, f"Nouvelle commande assignée : {commande_id}")
+            pickup, travel, dist = compute_delivery_times()
+            log_livreur(livreur_id, f"Distance estimée : {dist:.1f} km")
+
+            log_livreur(livreur_id, f"⏳ Récupération (~{pickup:.1f}s)...")
+            time.sleep(pickup)
+
+            log_livreur(livreur_id, f"🛣️ En route (~{travel:.1f}s)...")
+            time.sleep(travel)
+
+            commandes.update_one(
+                {"_id": commande_id},
+                {"$set": {"statut": "livree"}}
+            )
+            log_livreur(livreur_id, f"→ commande_livree publiée ({commande_id})")
 
 
 if __name__ == "__main__":

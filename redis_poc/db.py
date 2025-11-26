@@ -1,86 +1,36 @@
 # redis_poc/db.py
-import redis
+"""
+Utilitaires Redis pour le POC UberEats :
+- Connexion à Redis
+- Sauvegarde / lecture d'une commande
+"""
+
 import json
-from typing import Optional, Dict, Any
-
-REDIS_HOST = "localhost"
-REDIS_PORT = 6379
-REDIS_DB = 0
-
-COMMANDE_KEY_PREFIX = "commande:"
+import redis
 
 
 def get_redis_connection() -> redis.Redis:
     """
     Retourne une connexion Redis.
-    decode_responses=True -> on manipule des str, pas des bytes.
+    decode_responses=True → on travaille directement avec des str.
     """
-    return redis.Redis(
-        host=REDIS_HOST,
-        port=REDIS_PORT,
-        db=REDIS_DB,
-        decode_responses=True,
-    )
+    return redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
 
-def _commande_key(commande_id: str) -> str:
-    return f"{COMMANDE_KEY_PREFIX}{commande_id}"
-
-
-def initialiser_commande(
-    commande_id: str,
-    client_id: str,
-    restaurant: Dict[str, Any],
-    menu: Dict[str, Any],
-) -> None:
+def save_commande(r: redis.Redis, commande_id: str, data: dict) -> None:
     """
-    Crée une commande dans Redis avec le statut 'cree'.
-    On stocke un snapshot simple.
+    Sauvegarde une commande dans un hash Redis "commandes".
+    La valeur est un JSON pour rester flexible.
     """
-    r = get_redis_connection()
-    r.hset(
-        _commande_key(commande_id),
-        mapping={
-            "commande_id": commande_id,
-            "client_id": client_id,
-            "restaurant_id": restaurant["restaurant_id"],
-            "restaurant_name": restaurant["restaurant_name"],
-            "menu_id": menu["menu_id"],
-            "menu_name": menu["menu_name"],
-            "livreur_id": "",
-            "statut": "cree",
-        },
-    )
+    r.hset("commandes", commande_id, json.dumps(data))
 
 
-def mettre_a_jour_statut(
-    commande_id: str,
-    statut: str,
-    livreur_id: Optional[str] = None,
-) -> None:
+def read_commande(r: redis.Redis, commande_id: str) -> dict | None:
     """
-    Met à jour le statut (et éventuellement le livreur) de la commande.
+    Lit une commande dans le hash "commandes".
+    Retourne un dict ou None si l'ID n'existe pas.
     """
-    r = get_redis_connection()
-    values: Dict[str, Any] = {"statut": statut}
-    if livreur_id is not None:
-        values["livreur_id"] = livreur_id
-    r.hset(_commande_key(commande_id), mapping=values)
-
-
-def lire_commande(commande_id: str) -> Dict[str, str]:
-    """
-    Lit la commande sous forme de dict Python (pour affichage/debug).
-    """
-    r = get_redis_connection()
-    return r.hgetall(_commande_key(commande_id))
-
-
-def publier_event(channel: str, payload: dict) -> None:
-    """
-    Publie un évènement (dict) au format JSON sur un channel Redis.
-    """
-    r = get_redis_connection()
-    msg = json.dumps(payload, ensure_ascii=False)
-    r.publish(channel, msg)
-    print(f"[REDIS] publish -> {channel}: {msg}")
+    raw = r.hget("commandes", commande_id)
+    if raw is None:
+        return None
+    return json.loads(raw)

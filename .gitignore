@@ -1,36 +1,53 @@
-# --- DATA (IMPORTANT : les datasets sont trop lourds pour GitHub)
+# ============================================================
+#     GITIGNORE – Projet UberEats PoC (MongoDB + Redis)
+# ============================================================
+
+# --- Dataset Kaggle (trop lourd pour GitHub)
 data/
 data_local/
-*.csv
-*.json
+data/*.csv
+data/*.json
 
-# Environnements virtuels
+# Autoriser les petits JSON du code source (exceptions)
+!mongo/**/*.json
+!redis_poc/**/*.json
+!tools/**/*.json
+
+# --- Environnements virtuels Python
 .venv/
 venv/
+env/
+ENV/
 
-# Python cache
+# --- Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Checkpoints
-../checkpoints/
+# --- Logs
+*.log
+
+# --- Checkpoints / sauvegardes
 checkpoints/
 *.tar.gz
+*.zip
 
-# Mongo / Redis dumps
+# --- MongoDB / Redis dumps
 dump/
 *.rdb
 
-# Logs
-*.log
-
-# VSCode / IDE
+# --- Fichiers système / IDE
 .vscode/
 .idea/
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Data sensitive or large
-*.zip
+# --- Fichiers compilés LaTeX (si tu en génères d'autres)
+*.aux
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk

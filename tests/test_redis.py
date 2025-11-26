@@ -1,0 +1,1 @@
+print("Ok - Chargement modules Redis réussi")

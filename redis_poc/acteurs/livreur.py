@@ -1,55 +1,50 @@
-# redis_poc/acteurs/livreur.py
-
 import json
 import time
+import random
+from redis_poc.db import get_redis_connection, read_commande, save_commande
+from redis_poc.logger import log_livreur
 
-from redis_poc.db import (
-    get_redis_connection,
-    lire_commande,
-    publier_event,
-    mettre_a_jour_statut,
-)
-
-CHANNEL_COMMANDE_ASSIGNEE = "commande_assignee"
-CHANNEL_COMMANDE_LIVREE = "commande_livree"
-
+def compute_delivery_times():
+    distance = random.uniform(0.5, 5.0)
+    pickup = random.uniform(1.0, 2.0)
+    travel = distance * random.uniform(0.8, 1.3)
+    return pickup, travel, round(distance, 1)
 
 def main():
-    print("=== LIVREUR (Redis / PubSub) ===")
-    print("Ce script simule le livreur.\n")
+    log_livreur("LIVREUR_1", "=== LIVREUR (Redis) ===")
+
     r = get_redis_connection()
     pubsub = r.pubsub()
-    pubsub.subscribe(CHANNEL_COMMANDE_ASSIGNEE)
+    pubsub.subscribe("commande_assignee")
 
-    print(f"[LIVREUR] Abonné au channel '{CHANNEL_COMMANDE_ASSIGNEE}'\n")
+    livreur_id = "LIVREUR_1"
 
-    for message in pubsub.listen():
-        if message["type"] != "message":
+    for msg in pubsub.listen():
+        if msg["type"] != "message":
             continue
 
-        data = json.loads(message["data"])
-        commande_id = data.get("commande_id")
-        livreur_id = data.get("livreur_id")
+        data = json.loads(msg["data"])
+        if data["livreur_id"] != livreur_id:
+            continue
 
-        print(f"[LIVREUR] Nouvelle commande assignée : {commande_id}")
-        print(f"[LIVREUR] Je suis le livreur : {livreur_id}")
-        print("[LIVREUR] État actuel en base :")
-        print(lire_commande(commande_id))
+        cmd_id = data["commande_id"]
+        log_livreur(livreur_id, "Nouvelle commande assignée")
 
-        print("[LIVREUR] Livraison en cours (~1.5s)...")
-        time.sleep(1.5)
+        pickup, travel, dist = compute_delivery_times()
 
-        # Mettre à jour le statut
-        mettre_a_jour_statut(commande_id, "livree_par_livreur", livreur_id)
+        log_livreur(livreur_id, f"Distance estimée : {dist} km")
+        print(f"[LIVREUR] ⏳ Récupération (~{pickup:.1f}s)…")
+        time.sleep(pickup)
 
-        # Signaler à la plateforme que la commande est livrée
-        payload = {"commande_id": commande_id}
-        publier_event(CHANNEL_COMMANDE_LIVREE, payload)
-        print(
-            f"[LIVREUR] → Évènement '{CHANNEL_COMMANDE_LIVREE}' publié "
-            f"pour {commande_id}\n"
-        )
+        log_livreur(livreur_id, "🛣️ En route vers le client")
+        time.sleep(travel)
 
+        commande = read_commande(r, cmd_id)
+        commande["statut"] = "livree"
+        save_commande(r, cmd_id, commande)
+
+        r.publish("commande_livree", json.dumps({"commande_id": cmd_id}))
+        log_livreur(livreur_id, f"→ commande_livree publiée ({cmd_id})")
 
 if __name__ == "__main__":
     main()

@@ -1,27 +1,36 @@
 # mongo/acteurs/restaurant.py
-
-import random
 import time
-
-from mongo.db import ecouter_evenements, mettre_a_jour_statut
-from mongo.models import STATUT_A_PREPARER, STATUT_PRETE
+import random
+from redis_poc.logger import log_restaurant
+from mongo.db import get_db
 
 
 def main():
     print("=== RESTAURANT (MongoDB / Change Streams) ===")
+    db = get_db()
+    commandes = db["commandes"]
 
-    # Le restaurant prépare toutes les commandes qui passent à 'a_preparer'
-    for event in ecouter_evenements(STATUT_A_PREPARER):
-        commande_id = str(event["_id"])
-        print(f"[RESTAURANT] Nouvelle commande à préparer : {commande_id}")
+    log_restaurant("En attente de commandes à préparer...")
 
-        # Simulation du temps de préparation
-        temps = random.uniform(0.5, 2.0)
-        print(f"[RESTAURANT] Préparation en cours... (~{temps:.1f}s)")
-        time.sleep(temps)
+    with commandes.watch(full_document="updateLookup") as stream:
+        for change in stream:
+            doc = change["fullDocument"]
+            if doc.get("statut") != "a_preparer":
+                continue
 
-        mettre_a_jour_statut(commande_id, STATUT_PRETE)
-        print(f"[RESTAURANT] → Commande prête (statut = {STATUT_PRETE}).\n")
+            commande_id = doc["_id"]
+            log_restaurant(f"Nouvelle commande à préparer : {commande_id}")
+            print(f"[RESTAURANT] Détails : {doc['restaurant_name']} - {doc['menu_name']}")
+
+            delai = random.uniform(8.0, 12.0)
+            log_restaurant(f"Préparation en cours (~{delai:.1f}s)...")
+            time.sleep(delai)
+
+            commandes.update_one(
+                {"_id": commande_id},
+                {"$set": {"statut": "prete"}}
+            )
+            log_restaurant(f"Commande prête : {commande_id}")
 
 
 if __name__ == "__main__":

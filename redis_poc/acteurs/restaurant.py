@@ -1,53 +1,37 @@
-# redis_poc/acteurs/restaurant.py
-
 import json
 import time
-
-from redis_poc.db import (
-    get_redis_connection,
-    lire_commande,
-    publier_event,
-    mettre_a_jour_statut,
-)
-
-CHANNEL_COMMANDE_A_PREPARER = "commande_a_preparer"
-CHANNEL_COMMANDE_PRETE = "commande_prete"
-
+import random
+from redis_poc.db import get_redis_connection, read_commande, save_commande
+from redis_poc.logger import log_restaurant
 
 def main():
-    print("=== RESTAURANT (Redis / PubSub) ===")
-    print("Ce script simule le restaurant.\n")
+    log_restaurant("=== RESTAURANT (Redis) ===")
+
     r = get_redis_connection()
     pubsub = r.pubsub()
-    pubsub.subscribe(CHANNEL_COMMANDE_A_PREPARER)
+    pubsub.subscribe("commande_a_preparer")
 
-    print(f"[RESTAURANT] Abonné au channel '{CHANNEL_COMMANDE_A_PREPARER}'\n")
+    log_restaurant("Abonné à 'commande_a_preparer'")
 
-    for message in pubsub.listen():
-        if message["type"] != "message":
+    for msg in pubsub.listen():
+        if msg["type"] != "message":
             continue
 
-        data = json.loads(message["data"])
-        commande_id = data.get("commande_id")
-        print(f"[RESTAURANT] Nouvelle commande à préparer : {commande_id}")
-        print("[RESTAURANT] État actuel en base :")
-        print(lire_commande(commande_id))
+        data = json.loads(msg["data"])
+        cmd_id = data["commande_id"]
 
-        # Simulation de préparation
-        print("[RESTAURANT] Préparation en cours (~1s)...")
-        time.sleep(1.0)
+        log_restaurant(f"Nouvelle commande à préparer : {cmd_id}")
 
-        # Met à jour le statut localement
-        mettre_a_jour_statut(commande_id, "prete_par_restaurant")
+        preparation_time = random.uniform(2.0, 5.0)  # réaliste mais pas trop long
+        print(f"[RESTAURANT] ⏳ Préparation (~{preparation_time:.1f}s)…")
+        time.sleep(preparation_time)
 
-        # Signale à la plateforme que la commande est prête
-        payload = {"commande_id": commande_id}
-        publier_event(CHANNEL_COMMANDE_PRETE, payload)
-        print(
-            f"[RESTAURANT] → Évènement '{CHANNEL_COMMANDE_PRETE}' publié "
-            f"pour {commande_id}\n"
-        )
+        commande = read_commande(r, cmd_id)
+        commande["statut"] = "prete"
+        save_commande(r, cmd_id, commande)
 
+        r.publish("commande_prete", json.dumps({"commande_id": cmd_id}))
+        log_restaurant("→ commande_prete publiée")
 
 if __name__ == "__main__":
     main()
