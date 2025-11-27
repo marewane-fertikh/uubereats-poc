@@ -1,4 +1,4 @@
-# 🍔 UberEats-PoC — Simulation distribuée avec MongoDB (Change Streams) et Redis (Pub/Sub)
+#  UberEats-PoC — Simulation distribuée avec MongoDB (Change Streams) et Redis (Pub/Sub)
 
 Projet réalisé dans le cadre de la ressource **Nouveaux Paradigmes de Bases de Données** (BUT3 Informatique).  
 Comparaison de deux technologies NoSQL dans un scénario complet inspiré d’Uber Eats :
@@ -14,7 +14,7 @@ et de comprendre leurs cas d’usage respectifs.
 
 ---
 
-## 📁 Structure du projet
+##  Structure du projet
 
 ```
 uubereats-poc/
@@ -34,12 +34,12 @@ uubereats-poc/
 └── tools/            # Scripts (conversion CSV → JSON, etc.)
 ```
 
-> ⚠️ Les fichiers Kaggle sont volumineux. Ils sont stockés dans `data_local/`  
+>  Les fichiers Kaggle sont volumineux. Ils sont stockés dans `data_local/`  
 > et un lien symbolique `data/` permet de les utiliser sans les commiter dans Git.
 
 ---
 
-## 🛠️ Installation
+##  Installation
 
 ### 1. Cloner le projet
 
@@ -74,7 +74,7 @@ mongosh --eval "rs.status()"
 
 ---
 
-## 🍃 Lancer le PoC MongoDB (4 acteurs)
+##  Lancer le PoC MongoDB (4 acteurs)
 
 Chaque acteur doit être lancé dans un terminal distinct.
 
@@ -103,7 +103,7 @@ python -m mongo.acteurs.timeline <order_id>
 
 ---
 
-## 🔴 Lancer le PoC Redis (Pub/Sub)
+##  Lancer le PoC Redis (Pub/Sub)
 
 Redis diffuse les événements instantanément entre les acteurs.
 
@@ -132,7 +132,7 @@ Chaque terminal utilise des logs colorés pour visualiser clairement :
 
 ---
 
-## 📊 Architecture simulée
+##  Architecture simulée
 
 Le pipeline respecte le diagramme de séquence du projet :
 
@@ -145,7 +145,7 @@ Livreur → commande_livrée → Plateforme → Client
 
 ---
 
-## 📈 Résumé technique
+##  Résumé technique
 
 ### MongoDB
 - ✔ Change Streams pour notifier les mises à jour
@@ -161,10 +161,10 @@ Livreur → commande_livrée → Plateforme → Client
 
 ---
 
-## 📚 Rapport complet
+##  Rapport complet
 
 Le rapport PDF associé au projet (22 pages) est disponible ici :  
-**👉 Du_dataset_Kaggle_a_la_simulation_distribuee.pdf**
+** Du_dataset_Kaggle_a_la_simulation_distribuee.pdf**
 
 Il contient :
 - l’analyse technique,
@@ -176,7 +176,7 @@ Il contient :
 
 ---
 
-## 🧑‍💻 Auteur
+##  Auteur
 
 Projet réalisé par **Marewane Fertikh**  
 BUT3 Informatique – IUT de Villetaneuse  
@@ -184,15 +184,16 @@ Ressource : Nouveaux Paradigmes de Bases de Données
 
 ---
 
-## ✔️ Licence
+##  Licence
 
 Ce projet est libre à des fins pédagogiques.  
 **MIT License**
 
 ---
 
-## 💬 Questions / remarques
+##  Questions / remarques
 
 Pour toute remarque ou demande d’information :  
-📧 marewane.fertikh@edu.univ-paris13.fr
+ marewane.fertikh@edu.univ-paris13.fr
+
 
