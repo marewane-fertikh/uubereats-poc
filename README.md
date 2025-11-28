@@ -44,7 +44,7 @@ uubereats-poc/
 ### 1. Cloner le projet
 
 ```bash
-git clone https://github.com/<username>/uubereats-poc.git
+git clone https://github.com/marewane-fertikh/uubereats-poc.git
 cd uubereats-poc
 ```
 
